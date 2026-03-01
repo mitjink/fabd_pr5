@@ -15,4 +15,5 @@
 - PATCH /api/products/{id}  
 - DELETE /api/products/{id}  
   
-Swagger доступен по адресу: http://localhost:3000/api-docs/
+Swagger доступен по адресу: http://localhost:3000/api-docs/  
+Работает в интерактивном режиме 
