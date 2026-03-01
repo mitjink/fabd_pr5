@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 const app = express();
 const port = 3000;
 
@@ -106,6 +108,76 @@ let goods = [
     }
 ];
 
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'API интернет-магазина',
+            version: '1.0.0',
+            description: 'API для управления товарами',
+            contact: {
+                name: 'Ваше имя'
+            }
+        },
+        servers: [
+            {
+                url: 'http://localhost:3000',
+                description: 'Локальный сервер'
+            }
+        ]
+    },
+    apis: ['./app.js'], 
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Good:
+ *       type: object
+ *       required:
+ *         - name
+ *         - cost
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: Уникальный ID товара
+ *         name:
+ *           type: string
+ *           description: Название товара
+ *         cost:
+ *           type: number
+ *           description: Цена товара в рублях
+ *         category:
+ *           type: string
+ *           description: Категория товара
+ *         description:
+ *           type: string
+ *           description: Описание товара
+ *         stock:
+ *           type: integer
+ *           description: Количество на складе
+ *         rating:
+ *           type: number
+ *           description: Рейтинг товара (0-5)
+ *         imageUrl:
+ *           type: string
+ *           description: URL изображения
+ *       example:
+ *         id: 1
+ *         name: Ноутбук
+ *         cost: 75000
+ *         category: Электроника
+ *         description: Ноутбук
+ *         stock: 5
+ *         rating: 4.8
+ *         imageUrl: "/images/laptop.jpg"
+ */
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.use(express.json());
 app.use(cors({ origin: "http://localhost:3001" })); 
 
@@ -118,15 +190,95 @@ app.get('/', (req, res) => {
     res.send('API интернет-магазина');
 });
 
+/**
+ * @swagger
+ * /goods:
+ *   get:
+ *     summary: Получить список всех товаров
+ *     tags: [Товары]
+ *     responses:
+ *       200:
+ *         description: Список товаров
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Good'
+ */
+
 app.get('/goods', (req, res) => {
     res.json(goods);
 });
+
+/**
+ * @swagger
+ * /goods/{id}:
+ *   get:
+ *     summary: Получить товар по ID
+ *     tags: [Товары]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID товара
+ *     responses:
+ *       200:
+ *         description: Товар найден
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Good'
+ *       404:
+ *         description: Товар не найден
+ */
 
 app.get('/goods/:id', (req, res) => {
     let good = goods.find(g => g.id == req.params.id);
     if (!good) return res.status(404).json({ message: 'Товар не найден.' });
     res.json(good);
 });
+
+/**
+ * @swagger
+ * /goods:
+ *   post:
+ *     summary: Создать новый товар
+ *     tags: [Товары]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - cost
+ *             properties:
+ *               name:
+ *                 type: string
+ *               cost:
+ *                 type: number
+ *               category:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               stock:
+ *                 type: integer
+ *               rating:
+ *                 type: number
+ *               imageUrl:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Товар создан
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Good'
+ */
 
 app.post('/goods', (req, res) => {
     const { name, cost, category, description, stock, imageUrl, rating } = req.body;
@@ -145,6 +297,46 @@ app.post('/goods', (req, res) => {
     res.status(201).json(newGood);
 });
 
+/**
+ * @swagger
+ * /goods/{id}:
+ *   patch:
+ *     summary: Обновить товар
+ *     tags: [Товары]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               cost:
+ *                 type: number
+ *               category:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               stock:
+ *                 type: integer
+ *               rating:
+ *                 type: number
+ *               imageUrl:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Товар обновлен
+ *       404:
+ *         description: Товар не найден
+ */
+
 app.patch('/goods/:id', (req, res) => {
     const good = goods.find(g => g.id == req.params.id);
     if (!good) return res.status(404).json({ message: 'Товар не найден' });
@@ -161,6 +353,25 @@ app.patch('/goods/:id', (req, res) => {
 
     res.json(good);
 });
+
+/**
+ * @swagger
+ * /goods/{id}:
+ *   delete:
+ *     summary: Удалить товар
+ *     tags: [Товары]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       204:
+ *         description: Товар удален
+ *       404:
+ *         description: Товар не найден
+ */
 
 app.delete('/goods/:id', (req, res) => {
     const exists = goods.some(g => g.id == req.params.id);
