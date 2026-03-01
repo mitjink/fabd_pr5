@@ -1,0 +1,25 @@
+# Зависимости
+**/node_modules/
+
+# Сборка фронтенда
+frontend/build/
+frontend/dist/
+
+# Переменные окружения
+.env
+.env.local
+backend/.env
+frontend/.env
+
+# Логи
+*.log
+npm-debug.log*
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp.DS_Store
